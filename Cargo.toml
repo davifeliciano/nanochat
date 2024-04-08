@@ -1,0 +1,28 @@
+[package]
+name = "nanochat"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+argon2 = "0.5.3"
+chrono = { version = "0.4.37", features = ["serde"] }
+hex = "0.4.3"
+jsonwebtoken = "9.2.0"
+prost = "0.12.3"
+rand = "0.8.5"
+rocket = { version = "0.5.0", features = ["json", "uuid"] }
+rocket_ws = "0.1.0"
+
+[dependencies.sqlx]
+version = "0.7"
+default-features = false
+features = ["macros", "uuid", "time", "chrono"]
+
+[dependencies.rocket_db_pools]
+version = "0.1.0"
+features = ["sqlx_postgres"]
+
+[build-dependencies]
+prost-build = "0.12.3"

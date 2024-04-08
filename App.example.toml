@@ -1,0 +1,12 @@
+[default]
+argon_secret = "some_256_bit_hex_encoded_secret_key"
+access_token_secret = "some_256_bit_hex_encoded_secret_key"
+refresh_token_secret = "some_256_bit_hex_encoded_secret_key"
+
+[debug]
+refresh_token_ttl_sec = 240
+access_token_ttl_sec = 120
+
+[release]
+refresh_token_ttl_sec = 172800
+access_token_ttl_sec = 3600
