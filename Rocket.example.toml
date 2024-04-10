@@ -1,5 +1,5 @@
 [default.databases.nanochat]
 url = "postgresql://username:password@localhost:5432/db"
 
-[release]
+[default]
 secret_key = "some_256_bit_base64_encoded_secret_key"
