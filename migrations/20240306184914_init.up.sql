@@ -4,12 +4,12 @@ CREATE TABLE users (
     username varchar(32) UNIQUE NOT NULL CHECK (username ~ '^[\w\-_]{2,32}$'),
     password varchar(256) NOT NULL,
     pbkdf2_salt varchar(256) NOT NULL,
-    created_at timestamp DEFAULT now()
+    created_at timestamp DEFAULT now() NOT NULL
 );
 
 CREATE TABLE sessions (
     id serial PRIMARY KEY,
-    token varchar(256) NOT NULL,
-    user_id uuid REFERENCES users(id),
-    created_at timestamp DEFAULT now()
+    token varchar(512) NOT NULL,
+    user_id uuid REFERENCES users(id) NOT NULL,
+    created_at timestamp DEFAULT now() NOT NULL
 );
