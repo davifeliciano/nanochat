@@ -1,5 +1,5 @@
 use nanochat::{
-    auth::{signin, signup},
+    auth::handlers::{signin, signup},
     config::Config,
     db::Db,
 };
