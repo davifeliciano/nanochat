@@ -35,7 +35,7 @@ pub async fn get_user_by_username(
         .await
 }
 
-pub async fn remove_all_user_sessions_on_reuse(
+pub async fn delete_all_user_sessions_on_reuse(
     db: &mut PgConnection,
     user_id: Uuid,
     token: &str,
@@ -87,6 +87,20 @@ pub async fn update_session(
         user_id,
         old_token,
         new_token
+    )
+    .execute(&mut *db)
+    .await
+}
+
+pub async fn delete_session(
+    db: &mut PgConnection,
+    user_id: Uuid,
+    token: &str,
+) -> Result<PgQueryResult, sqlx::Error> {
+    sqlx::query!(
+        r"DELETE FROM sessions WHERE user_id = $1 AND token = $2;",
+        user_id,
+        token
     )
     .execute(&mut *db)
     .await

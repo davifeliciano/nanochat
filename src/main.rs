@@ -1,5 +1,5 @@
 use nanochat::{
-    auth::handlers::{refresh, signin, signup},
+    auth::handlers::{logout, refresh, signin, signup},
     config::Config,
     db::Db,
 };
@@ -17,5 +17,5 @@ fn rocket() -> _ {
     rocket::custom(figment)
         .attach(AdHoc::config::<Config>())
         .attach(Db::init())
-        .mount("/auth", routes![signup, signin, refresh])
+        .mount("/auth", routes![signup, signin, refresh, logout])
 }

@@ -107,7 +107,7 @@ pub async fn signin(
     .or(Err(Status::Unauthorized))?;
 
     if let Some(c) = cookies.get_private("session") {
-        repo::remove_all_user_sessions_on_reuse(&mut db, user.id, c.value())
+        repo::delete_all_user_sessions_on_reuse(&mut db, user.id, c.value())
             .await
             .or(Err(Status::InternalServerError))?;
     }
@@ -152,7 +152,7 @@ pub async fn refresh(
     let user_id = user.id;
 
     if let Some(ref c) = session {
-        let result = repo::remove_all_user_sessions_on_reuse(&mut db, user.id, c.value()).await;
+        let result = repo::delete_all_user_sessions_on_reuse(&mut db, user.id, c.value()).await;
 
         match result {
             Err(_) => return Err(Status::InternalServerError),
@@ -196,4 +196,29 @@ pub async fn refresh(
 }
 
 #[rocket::post("/logout")]
-pub fn logout(mut db: Connection<Db>, user: AuthenticatedUser, cookies: &CookieJar<'_>) {}
+pub async fn logout(
+    mut db: Connection<Db>,
+    user: AuthenticatedUser,
+    cookies: &CookieJar<'_>,
+) -> Result<(), Status> {
+    let user_id = user.id;
+
+    if let Some(ref c) = cookies.get_private("session") {
+        let result = repo::delete_session(&mut db, user_id, c.value()).await;
+        cookies.remove_private("session");
+
+        match result {
+            Err(_) => return Err(Status::InternalServerError),
+            Ok(r) if r.rows_affected() == 0 => {
+                repo::delete_all_user_sessions_on_reuse(&mut db, user_id, c.value())
+                    .await
+                    .or(Err(Status::InternalServerError))?;
+
+                Ok(())
+            }
+            _ => Ok(()),
+        }
+    } else {
+        Err(Status::Unauthorized)
+    }
+}
