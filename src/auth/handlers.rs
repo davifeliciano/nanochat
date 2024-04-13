@@ -9,7 +9,6 @@ use argon2::{
     password_hash::SaltString, Algorithm, Argon2, Params, PasswordHash, PasswordHasher,
     PasswordVerifier, Version,
 };
-use jsonwebtoken::{EncodingKey, Header};
 use rand::rngs::OsRng;
 use rocket::{
     http::{Cookie, CookieJar, Status},
@@ -114,25 +113,20 @@ pub async fn signin(
     }
 
     let now = chrono::Utc::now().timestamp() as usize;
-    let access_token = jsonwebtoken::encode(
-        &Header::default(),
-        &Claims {
-            user: AuthenticatedUser::from_user(&user),
-            exp: now + config.access_token_ttl_sec as usize,
-        },
-        &EncodingKey::from_secret(config.access_token_secret.as_bytes()),
-    )
-    .or(Err(Status::InternalServerError))?;
+    let mut claims = Claims {
+        user: AuthenticatedUser::from_user(&user),
+        exp: now + config.access_token_ttl_sec as usize,
+    };
 
-    let refresh_token = jsonwebtoken::encode(
-        &Header::default(),
-        &Claims {
-            user: AuthenticatedUser::from_user(&user),
-            exp: now + config.refresh_token_ttl_sec as usize,
-        },
-        &EncodingKey::from_secret(config.refresh_token_secret.as_bytes()),
-    )
-    .or(Err(Status::InternalServerError))?;
+    let access_token = claims
+        .encode(config.access_token_secret.as_bytes())
+        .or(Err(Status::InternalServerError))?;
+
+    claims.exp = now + config.refresh_token_ttl_sec as usize;
+
+    let refresh_token = claims
+        .encode(config.refresh_token_secret.as_bytes())
+        .or(Err(Status::InternalServerError))?;
 
     repo::create_session(&mut db, user.id, &refresh_token)
         .await
@@ -148,7 +142,58 @@ pub async fn signin(
 }
 
 #[rocket::post("/refresh")]
-pub fn refresh(mut db: Connection<Db>, user: AuthenticatedUser, cookies: &CookieJar<'_>) {}
+pub async fn refresh(
+    mut db: Connection<Db>,
+    user: AuthenticatedUser,
+    cookies: &CookieJar<'_>,
+    config: &State<Config>,
+) -> Result<Json<AccessToken>, Status> {
+    let session = cookies.get_private("session");
+    let user_id = user.id;
+
+    if let Some(ref c) = session {
+        let result = repo::remove_all_user_sessions_on_reuse(&mut db, user.id, c.value()).await;
+
+        match result {
+            Err(_) => return Err(Status::InternalServerError),
+            Ok(r) if r.rows_affected() != 0 => {
+                cookies.remove_private("session");
+                return Err(Status::Unauthorized);
+            }
+            _ => {}
+        }
+    } else {
+        return Err(Status::Unauthorized);
+    }
+
+    let now = chrono::Utc::now().timestamp() as usize;
+    let mut claims = Claims {
+        user,
+        exp: now + config.access_token_ttl_sec as usize,
+    };
+
+    let access_token = claims
+        .encode(config.access_token_secret.as_bytes())
+        .or(Err(Status::InternalServerError))?;
+
+    claims.exp = now + config.refresh_token_ttl_sec as usize;
+
+    let refresh_token = claims
+        .encode(config.refresh_token_secret.as_bytes())
+        .or(Err(Status::InternalServerError))?;
+
+    repo::update_session(&mut db, user_id, &session.unwrap().value(), &refresh_token)
+        .await
+        .or(Err(Status::InternalServerError))?;
+
+    cookies.add_private(Cookie::build(("session", refresh_token)).max_age(
+        rocket::time::Duration::seconds(config.refresh_token_ttl_sec as i64),
+    ));
+
+    Ok(Json(AccessToken {
+        token: access_token,
+    }))
+}
 
 #[rocket::post("/logout")]
 pub fn logout(mut db: Connection<Db>, user: AuthenticatedUser, cookies: &CookieJar<'_>) {}

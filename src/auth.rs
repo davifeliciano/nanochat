@@ -1,5 +1,5 @@
 use crate::config::Config;
-use jsonwebtoken::{DecodingKey, Validation};
+use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation};
 use rocket::{
     http::Status,
     request::{FromRequest, Outcome},
@@ -77,19 +77,6 @@ impl AuthenticatedUser {
     }
 }
 
-#[derive(Deserialize, Serialize)]
-#[serde(crate = "rocket::serde")]
-struct Claims {
-    user: AuthenticatedUser,
-    exp: usize,
-}
-
-#[derive(Deserialize, Serialize)]
-#[serde(crate = "rocket::serde")]
-pub struct AccessToken {
-    pub token: String,
-}
-
 #[rocket::async_trait]
 impl<'r> FromRequest<'r> for AuthenticatedUser {
     type Error = ();
@@ -121,4 +108,23 @@ impl<'r> FromRequest<'r> for AuthenticatedUser {
             }
         }
     }
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct Claims {
+    user: AuthenticatedUser,
+    exp: usize,
+}
+
+impl Claims {
+    pub fn encode(&self, secret: &[u8]) -> Result<String, jsonwebtoken::errors::Error> {
+        jsonwebtoken::encode(&Header::default(), self, &EncodingKey::from_secret(secret))
+    }
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct AccessToken {
+    pub token: String,
 }

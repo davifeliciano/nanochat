@@ -69,3 +69,25 @@ pub async fn create_session(
     .execute(&mut *db)
     .await
 }
+
+pub async fn update_session(
+    db: &mut PgConnection,
+    user_id: Uuid,
+    old_token: &str,
+    new_token: &str,
+) -> Result<PgQueryResult, sqlx::Error> {
+    sqlx::query!(
+        r#"
+        UPDATE sessions
+        SET
+            token = $3,
+            created_at = NOW()
+        WHERE user_id = $1 AND token = $2
+        "#,
+        user_id,
+        old_token,
+        new_token
+    )
+    .execute(&mut *db)
+    .await
+}
