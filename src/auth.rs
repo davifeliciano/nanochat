@@ -54,7 +54,7 @@ pub struct User {
     username: String,
     password: String,
     pbkdf2_salt: String,
-    created_at: Option<sqlx::types::chrono::NaiveDateTime>,
+    created_at: sqlx::types::chrono::NaiveDateTime,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -63,7 +63,7 @@ pub struct AuthenticatedUser {
     pub id: Uuid,
     pub username: String,
     pub pbkdf2_salt: String,
-    pub created_at: Option<sqlx::types::chrono::NaiveDateTime>,
+    pub created_at: sqlx::types::chrono::NaiveDateTime,
 }
 
 impl AuthenticatedUser {
