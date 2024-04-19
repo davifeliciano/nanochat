@@ -12,7 +12,6 @@ use argon2::{
 use rand::rngs::OsRng;
 use rocket::{
     http::{Cookie, CookieJar, Status},
-    response::status::Created,
     serde::json::Json,
     State,
 };
@@ -24,7 +23,7 @@ pub async fn signup(
     mut db: Connection<Db>,
     body: Json<SignUp>,
     config: &State<Config>,
-) -> Result<Created<Json<AuthenticatedUser>>, Status> {
+) -> Result<Json<AuthenticatedUser>, Status> {
     if !body.validate() {
         return Err(Status::UnprocessableEntity);
     }
@@ -65,7 +64,7 @@ pub async fn signup(
         _ => Status::InternalServerError,
     })?;
 
-    Ok(Created::new("/signup").body(Json(user)))
+    Ok(Json(user))
 }
 
 #[rocket::post("/signin", data = "<body>")]

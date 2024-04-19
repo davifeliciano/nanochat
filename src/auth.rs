@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::{config::Config, Validate};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation};
 use rocket::{
     http::Status,
@@ -11,10 +11,6 @@ use rocket_db_pools::sqlx;
 pub mod handlers;
 mod repo;
 mod validators;
-
-trait Validate {
-    fn validate(&self) -> bool;
-}
 
 #[derive(Deserialize)]
 #[serde(crate = "rocket::serde")]
