@@ -1,6 +1,6 @@
-use super::{Chat, PublicKey};
+use super::{Chat, PublicKey, User};
 use crate::{auth::AuthenticatedUser, db::Db, users::repo, Validate};
-use rocket::{http::Status, serde::json::Json};
+use rocket::{http::Status, serde::json::Json, FromFormField};
 use rocket_db_pools::Connection;
 use sqlx::types::Uuid;
 
@@ -47,4 +47,40 @@ pub async fn accept(
         .ok_or(Status::NotFound)?;
 
     Ok(Json(chat))
+}
+
+#[derive(FromFormField)]
+pub enum UserFilter {
+    Invited,
+    Pending,
+    Friends,
+}
+
+#[rocket::get("/?<q>&<filter>", rank = 2)]
+pub async fn filtered_search(
+    mut db: Connection<Db>,
+    user: AuthenticatedUser,
+    q: Option<&str>,
+    filter: UserFilter,
+) -> Result<Json<Vec<User>>, Status> {
+    let users = match q {
+        Some(s) => repo::filtered_search_users(&mut db, user.id, s, filter).await,
+        None => repo::filtered_get_users(&mut db, user.id, filter).await,
+    }
+    .or(Err(Status::InternalServerError))?;
+
+    Ok(Json(users))
+}
+
+#[rocket::get("/?<q>", rank = 3)]
+pub async fn search(
+    mut db: Connection<Db>,
+    user: AuthenticatedUser,
+    q: &str,
+) -> Result<Json<Vec<User>>, Status> {
+    let users = repo::search_users(&mut db, user.id, q)
+        .await
+        .or(Err(Status::InternalServerError))?;
+
+    Ok(Json(users))
 }

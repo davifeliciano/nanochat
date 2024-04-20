@@ -69,7 +69,7 @@ impl Validate for PublicKey {
 #[serde(crate = "rocket::serde")]
 #[serde(rename_all = "camelCase")]
 pub struct User {
-    id: i32,
+    id: Uuid,
     username: String,
     created_at: sqlx::types::chrono::NaiveDateTime,
 }
