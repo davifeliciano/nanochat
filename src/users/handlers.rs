@@ -1,6 +1,6 @@
 use super::{Chat, PublicKey, User};
-use crate::{auth::AuthenticatedUser, db::Db, users::repo, Validate};
-use rocket::{http::Status, serde::json::Json, FromFormField};
+use crate::{auth::AuthenticatedUser, chat::StoredMessage, db::Db, users::repo, Validate};
+use rocket::{http::Status, serde::json::Json, FromForm, FromFormField};
 use rocket_db_pools::Connection;
 use sqlx::types::Uuid;
 
@@ -83,4 +83,36 @@ pub async fn search(
         .or(Err(Status::InternalServerError))?;
 
     Ok(Json(users))
+}
+
+#[derive(FromForm)]
+pub struct MessagePage {
+    pub start_timestamp: i64,
+    pub start_id: i32,
+    pub limit: i64,
+}
+
+#[rocket::get("/<friend_id>/messages?<page..>")]
+pub async fn get_message_page(
+    mut db: Connection<Db>,
+    user: AuthenticatedUser,
+    friend_id: Uuid,
+    page: MessagePage,
+) -> Result<Json<Vec<StoredMessage>>, Status> {
+    let start_timestamp = chrono::DateTime::from_timestamp(page.start_timestamp, 0)
+        .ok_or(Status::UnprocessableEntity)?
+        .naive_utc();
+
+    let messages = crate::chat::repo::get_message_page(
+        &mut db,
+        user.id,
+        friend_id,
+        start_timestamp,
+        page.start_id,
+        page.limit,
+    )
+    .await
+    .or(Err(Status::InternalServerError))?;
+
+    Ok(Json(messages))
 }

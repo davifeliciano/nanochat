@@ -5,7 +5,7 @@ package chat;
 message Message {
   string sender_id = 1;
   string recipient_id = 2;
-  string content = 3;
+  bytes content = 3;
   int64 created_at = 4;
 }
 

@@ -1,8 +1,5 @@
-pub mod chat {
-    include!(concat!(env!("OUT_DIR"), "/chat.rs"));
-}
-
 pub mod auth;
+pub mod chat;
 pub mod config;
 pub mod db;
 pub mod users;
