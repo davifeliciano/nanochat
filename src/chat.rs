@@ -3,8 +3,6 @@ use sqlx::types::Uuid;
 
 pub mod repo;
 
-include!(concat!(env!("OUT_DIR"), "/chat.rs"));
-
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
 #[serde(rename_all = "camelCase")]

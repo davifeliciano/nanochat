@@ -10,7 +10,6 @@ argon2 = "0.5.3"
 chrono = { version = "0.4.37", features = ["serde"] }
 hex = { version = "0.4.3", features = ["serde"] }
 jsonwebtoken = "9.2.0"
-prost = "0.12.3"
 rand = "0.8.5"
 rocket = { version = "0.5.0", features = ["json", "uuid", "secrets"] }
 rocket_ws = "0.1.0"
@@ -23,6 +22,3 @@ features = ["macros", "uuid", "time", "chrono"]
 [dependencies.rocket_db_pools]
 version = "0.1.0"
 features = ["sqlx_postgres"]
-
-[build-dependencies]
-prost-build = "0.12.3"

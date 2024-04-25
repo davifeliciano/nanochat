@@ -1,6 +1,5 @@
-use super::{Message, StoredMessage};
+use super::StoredMessage;
 use sqlx::{
-    postgres::PgQueryResult,
     types::{chrono::NaiveDateTime, Uuid},
     PgConnection,
 };
@@ -30,27 +29,5 @@ pub async fn get_message_page(
         limit
     )
     .fetch_all(&mut *db)
-    .await
-}
-
-pub async fn insert_message(
-    db: &mut PgConnection,
-    msg: &Message,
-) -> Result<PgQueryResult, sqlx::Error> {
-    sqlx::query!(
-        r#"
-        INSERT INTO messages
-            (sender_id, recipient_id, content, created_at)
-        VALUES
-            ($1, $2, $3, $4);
-        "#,
-        Uuid::parse_str(&msg.sender_id).unwrap(),
-        Uuid::parse_str(&msg.recipient_id).unwrap(),
-        msg.content,
-        chrono::DateTime::from_timestamp(msg.created_at, 0)
-            .unwrap()
-            .naive_utc()
-    )
-    .execute(&mut *db)
     .await
 }
