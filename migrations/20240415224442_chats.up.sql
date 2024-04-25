@@ -21,7 +21,7 @@ CREATE TABLE messages (
 );
 
 CREATE INDEX messages_keyset_pag_idx ON messages
-USING btree (created_at DESC, id DESC);
+USING btree (sender_id, recipient_id, created_at DESC, id DESC);
 
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
