@@ -2,7 +2,7 @@ use nanochat::{
     auth::handlers::{logout, refresh, signin, signup},
     config::Config,
     db::Db,
-    users::handlers::{accept, filtered_search, invite, search},
+    users::handlers::{accept, filtered_search, get_message_page, invite, search},
 };
 use rocket::{
     fairing::AdHoc,
@@ -19,5 +19,8 @@ fn rocket() -> _ {
         .attach(AdHoc::config::<Config>())
         .attach(Db::init())
         .mount("/auth", routes![signup, signin, refresh, logout])
-        .mount("/users", routes![invite, accept, filtered_search, search])
+        .mount(
+            "/users",
+            routes![invite, accept, filtered_search, search, get_message_page],
+        )
 }
