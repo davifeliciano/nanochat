@@ -1,5 +1,6 @@
 use nanochat::{
     auth::handlers::{logout, refresh, signin, signup},
+    chat::handlers::insert_message,
     config::Config,
     db::Db,
     users::handlers::{accept, filtered_search, get_message_page, invite, search},
@@ -23,4 +24,5 @@ fn rocket() -> _ {
             "/users",
             routes![invite, accept, filtered_search, search, get_message_page],
         )
+        .mount("/messages", routes![insert_message])
 }
